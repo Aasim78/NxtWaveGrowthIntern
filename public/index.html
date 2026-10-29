@@ -1,21 +1,308 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Campus Problem to AI Project Lab</title><link rel="stylesheet" href="/style.css"></head><body><main class="wrap">
-<header class="nav"><div class="brand"><span class="mark">P</span>Campus Problem to AI Project Lab</div><span class="pill">FREE WORKSHOP · 60 MIN</span></header>
-<section class="hero"><div><div class="eyebrow">Your idea, scoped to a first build</div><div id="sourceBanner" class="banner"></div><h1>What student problem would you fix with AI?</h1><p class="lead">Turn a real everyday frustration into a small AI project brief. Then register for the guided workshop to build and test a first version.</p><div class="actions"><a class="btn" href="#lab" style="text-decoration:none">Make a project card</a><span class="hint">Try the tool before signing up.</span></div></div><div class="dark"><div><small>THE 60-MINUTE WORKFLOW</small><h2>From problem to a testable first version.</h2><p>Choose one small input and one useful output. Give an AI assistant context, shape its response, test it, and improve it.</p></div><div class="flow"><span><b>01</b>Problem</span><span><b>02</b>Prompt</span><span><b>03</b>Build</span><span><b>04</b>Test</span></div></div></section>
-<section class="grid" id="lab"><section class="card"><h2>Describe a problem you face</h2><p class="sub">Keep it narrow enough to explore in an hour. Example: “I lose track of which topics to revise before exams.”</p><form id="problemForm"><div class="field"><label for="problem">What is the problem?</label><textarea id="problem" maxlength="240" required placeholder="A common study, career, or campus-life problem..."></textarea><div class="hint">Do not enter names, contact details, private records, or confidential information. Your problem text is not stored on the server.</div></div><div class="row"><div class="field"><label for="area">Closest area</label><select id="area"><option value="study">Study and productivity</option><option value="career">Career and placement</option><option value="campus">Campus life</option></select></div><div class="field"><label for="experience">Coding experience</label><select id="experience"><option value="new">I am new to coding</option><option value="some">I have tried a little</option></select></div></div><button class="btn" type="submit">Turn this into a project card</button></form><div class="result" id="result" hidden><div class="eyebrow">YOUR PROJECT CARD</div><h3 id="projectTitle"></h3><p id="projectScope"></p><p class="hint">Starter prompt to take into the workshop</p><textarea class="prompt" id="prompt" readonly></textarea><div class="actions"><button class="btn light" id="copyPrompt" type="button">Copy starter prompt</button><button class="smallbtn" id="shareCard" type="button">Invite a classmate ↗</button></div><div class="notice"><b>Next step:</b> Register for the free guided workshop to build and test this small project.</div><div class="actions"><button class="btn" id="openSignup" type="button">Continue to registration</button></div></div></section>
-<section class="card"><h2>What the workshop will guide you through</h2><p class="sub">The proposed format keeps every project within one shared beginner workflow.</p><div class="options"><div class="out"><b>Frame one problem</b><span>Pick one use case and one example input.</span></div><div class="out"><b>Give useful context</b><span>Tell the assistant what it may use.</span></div><div class="out"><b>Shape its output</b><span>Write clear instructions and a format.</span></div><div class="out"><b>Test and improve</b><span>Check one result and refine the prompt.</span></div></div><div class="notice"><b>Scope:</b> a first assistant prototype, not a production app or full solution. The actual workshop agenda should be confirmed before a live launch.</div></section></section>
-<p class="footer">Workshop registration information is used to manage this event. Project problem text is only used in your browser to create the card.</p></main>
-<dialog id="signup"><form id="signupForm"><h2>Register for the free workshop</h2><p class="sub">Complete the form to reserve your place.</p><div class="field"><label for="name">Name</label><input id="name" maxlength="80" required></div><div class="field"><label for="email">Email</label><input id="email" type="email" maxlength="254" required></div><div class="field"><label for="college">College</label><input id="college" maxlength="120" required></div><div class="field"><label for="year">Graduation year</label><select id="year" required><option value="">Select a year</option><option>2026</option><option>2027</option><option>Recent graduate</option></select></div><label class="hint"><input id="consent" type="checkbox" required> I agree to share these details with the workshop organizer for this registration.</label><div class="actions"><button class="btn light" id="cancelSignup" type="button">Back</button><button class="btn" type="submit">Submit registration</button></div><div id="formMessage" class="message"></div></form></dialog><div class="toast" id="toast"></div>
-<script>
-const ref=new URLSearchParams(location.search).get("ref")||"direct";let projectText="";const $=id=>document.getElementById(id);
-async function api(url,body){let r=await fetch(url,{method:body?"POST":"GET",headers:body?{"Content-Type":"application/json"}:{},body:body?JSON.stringify(body):undefined});let d=await r.json();if(!r.ok)throw Error(d.error||"Request failed");return d}
-function toast(t){$("toast").textContent=t;$("toast").classList.add("on");setTimeout(()=>$("toast").classList.remove("on"),1900)}
-const titles={study:"Study Support Assistant",career:"Interview Practice Assistant",campus:"Campus Information Assistant"};
-const scopes={study:"Use one subject list and deadline to create a draft revision plan.",career:"Use one entry-level role to ask a practice question and give checklist-based feedback.",campus:"Use five supplied FAQ notes to answer one question, or say when the notes do not contain an answer."};
-const prompts={study:"Create a simple study planner. Ask me for subjects, my deadline, and available hours. Return a realistic day-by-day revision plan with breaks and state your assumptions.",career:"Act as an interview practice coach for an entry-level engineering role. Ask one question at a time, wait for my answer, then give feedback on clarity, structure, and technical detail. Do not invent experience.",campus:"Create a campus FAQ helper using only the notes I provide. If an answer is not in the notes, say you do not know. Keep answers short and friendly."};
-api("/api/source?ref="+encodeURIComponent(ref)).then(s=>{if(s.ref!=="direct"){$("sourceBanner").textContent="Shared by "+s.role+" · "+s.label;$("sourceBanner").style.display="inline-block"}}).catch(()=>{});
-$("problemForm").onsubmit=async e=>{e.preventDefault();projectText=$("problem").value.trim();let area=$("area").value,extra=$("experience").value==="new"?" Explain each step for a beginner with no coding experience.":" Keep the steps concise and suggest one simple customization.";let scope=scopes[area];$("projectTitle").textContent=titles[area];$("projectScope").textContent="Your problem: "+projectText+" 60-minute version: "+scope; $("prompt").value=prompts[area]+" My problem is: "+projectText+" Use mock/example data only. Give me one input, one useful output, and one test example. Do not add accounts, payments, or external integrations."+extra;$("result").hidden=false;try{await api("/api/track",{event:"brief",ref})}catch{}$("result").scrollIntoView({behavior:"smooth",block:"nearest"})};
-$("copyPrompt").onclick=async()=>{try{await navigator.clipboard.writeText($("prompt").value);toast("Starter prompt copied")}catch{toast("Select and copy the prompt text")}};
-$("shareCard").onclick=async()=>{try{await api("/api/track",{event:"share",ref})}catch{}let link=location.origin+"/?ref="+encodeURIComponent(ref),msg="I turned a student problem into a small AI project idea: "+$("projectTitle").textContent+". Make your own card and join the free 60-minute workshop: "+link;window.open("https://wa.me/?text="+encodeURIComponent(msg),"_blank","noopener")};
-$("openSignup").onclick=()=>$("signup").showModal();$("cancelSignup").onclick=()=>$("signup").close();
-$("signupForm").onsubmit=async e=>{e.preventDefault();$("formMessage").textContent="";try{await api("/api/register",{name:$("name").value,email:$("email").value,college:$("college").value,graduationYear:$("year").value,consent:$("consent").checked,ref});$("signupForm").reset();$("signup").close();toast("You are registered. Check your email for workshop details.")}catch(err){$("formMessage").textContent=err.message}};
-</script></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Campus Problem to AI Project Lab</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="nav">
+        <div class="brand">
+          <span class="mark">P</span>Campus Problem to AI Project Lab
+        </div>
+        <span class="pill">FREE WORKSHOP · 60 MIN</span>
+      </header>
+      <section class="hero">
+        <div>
+          <div class="eyebrow">Your idea, scoped to a first build</div>
+          <div id="sourceBanner" class="banner"></div>
+          <h1>What student problem would you fix with AI?</h1>
+          <p class="lead">
+            Turn a real everyday frustration into a small AI project brief. Then
+            register for the guided workshop to build and test a first version.
+          </p>
+          <div class="actions">
+            <a class="btn" href="#lab" style="text-decoration: none"
+              >Make a project card</a
+            ><span class="hint">Try the tool before signing up.</span>
+          </div>
+        </div>
+        <div class="dark">
+          <div>
+            <small>THE 60-MINUTE WORKFLOW</small>
+            <h2>From problem to a testable first version.</h2>
+            <p>
+              Choose one small input and one useful output. Give an AI assistant
+              context, shape its response, test it, and improve it.
+            </p>
+          </div>
+          <div class="flow">
+            <span><b>01</b>Problem</span><span><b>02</b>Prompt</span
+            ><span><b>03</b>Build</span><span><b>04</b>Test</span>
+          </div>
+        </div>
+      </section>
+      <section class="grid" id="lab">
+        <section class="card">
+          <h2>Describe a problem you face</h2>
+          <p class="sub">
+            Keep it narrow enough to explore in an hour. Example: “I lose track
+            of which topics to revise before exams.”
+          </p>
+          <form id="problemForm">
+            <div class="field">
+              <label for="problem">What is the problem?</label
+              ><textarea
+                id="problem"
+                maxlength="240"
+                required
+                placeholder="A common study, career, or campus-life problem..."
+              ></textarea>
+              <div class="hint">
+                Do not enter names, contact details, private records, or
+                confidential information. Your problem text is not stored on the
+                server.
+              </div>
+            </div>
+            <div class="row">
+              <div class="field">
+                <label for="area">Closest area</label
+                ><select id="area">
+                  <option value="study">Study and productivity</option>
+                  <option value="career">Career and placement</option>
+                  <option value="campus">Campus life</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="experience">Coding experience</label
+                ><select id="experience">
+                  <option value="new">I am new to coding</option>
+                  <option value="some">I have tried a little</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn" type="submit">
+              Turn this into a project card
+            </button>
+          </form>
+          <div class="result" id="result" hidden>
+            <div class="eyebrow">YOUR PROJECT CARD</div>
+            <h3 id="projectTitle"></h3>
+            <p id="projectScope"></p>
+            <p class="hint">Starter prompt to take into the workshop</p>
+            <textarea class="prompt" id="prompt" readonly></textarea>
+            <div class="actions">
+              <button class="btn light" id="copyPrompt" type="button">
+                Copy starter prompt</button
+              ><button class="smallbtn" id="shareCard" type="button">
+                Invite a classmate ↗
+              </button>
+            </div>
+            <div class="notice">
+              <b>Next step:</b> Register for the free guided workshop to build
+              and test this small project.
+            </div>
+            <div class="actions">
+              <button class="btn" id="openSignup" type="button">
+                Continue to registration
+              </button>
+            </div>
+          </div>
+        </section>
+        <section class="card">
+          <h2>What the workshop will guide you through</h2>
+          <p class="sub">
+            The proposed format keeps every project within one shared beginner
+            workflow.
+          </p>
+          <div class="options">
+            <div class="out">
+              <b>Frame one problem</b
+              ><span>Pick one use case and one example input.</span>
+            </div>
+            <div class="out">
+              <b>Give useful context</b
+              ><span>Tell the assistant what it may use.</span>
+            </div>
+            <div class="out">
+              <b>Shape its output</b
+              ><span>Write clear instructions and a format.</span>
+            </div>
+            <div class="out">
+              <b>Test and improve</b
+              ><span>Check one result and refine the prompt.</span>
+            </div>
+          </div>
+          <div class="notice">
+            <b>Scope:</b> a first assistant prototype, not a production app or
+            full solution. The actual workshop agenda should be confirmed before
+            a live launch.
+          </div>
+        </section>
+      </section>
+      <p class="footer">
+        Workshop registration information is used to manage this event. Project
+        problem text is only used in your browser to create the card.
+      </p>
+    </main>
+    <dialog id="signup">
+      <form id="signupForm">
+        <h2>Register for the free workshop</h2>
+        <p class="sub">Complete the form to reserve your place.</p>
+        <div class="field">
+          <label for="name">Name</label
+          ><input id="name" maxlength="80" required />
+        </div>
+        <div class="field">
+          <label for="email">Email</label
+          ><input id="email" type="email" maxlength="254" required />
+        </div>
+        <div class="field">
+          <label for="college">College</label
+          ><input id="college" maxlength="120" required />
+        </div>
+        <div class="field">
+          <label for="year">Graduation year</label
+          ><select id="year" required>
+            <option value="">Select a year</option>
+            <option>2026</option>
+            <option>2027</option>
+            <option>Recent graduate</option>
+          </select>
+        </div>
+        <label class="hint"
+          ><input id="consent" type="checkbox" required /> I agree to share
+          these details with the workshop organizer for this
+          registration.</label
+        >
+        <div class="actions">
+          <button class="btn light" id="cancelSignup" type="button">Back</button
+          ><button class="btn" type="submit">Submit registration</button>
+        </div>
+        <div id="formMessage" class="message"></div>
+      </form>
+    </dialog>
+    <div class="toast" id="toast"></div>
+    <script>
+      const ref = new URLSearchParams(location.search).get("ref") || "direct";
+      let projectText = "";
+      const $ = (id) => document.getElementById(id);
+      async function api(url, body) {
+        let r = await fetch(url, {
+          method: body ? "POST" : "GET",
+          headers: body ? { "Content-Type": "application/json" } : {},
+          body: body ? JSON.stringify(body) : undefined,
+        });
+        let d = await r.json();
+        if (!r.ok) throw Error(d.error || "Request failed");
+        return d;
+      }
+      function toast(t) {
+        $("toast").textContent = t;
+        $("toast").classList.add("on");
+        setTimeout(() => $("toast").classList.remove("on"), 1900);
+      }
+      const titles = {
+        study: "Study Support Assistant",
+        career: "Interview Practice Assistant",
+        campus: "Campus Information Assistant",
+      };
+      const scopes = {
+        study:
+          "Use one subject list and deadline to create a draft revision plan.",
+        career:
+          "Use one entry-level role to ask a practice question and give checklist-based feedback.",
+        campus:
+          "Use five supplied FAQ notes to answer one question, or say when the notes do not contain an answer.",
+      };
+      const prompts = {
+        study:
+          "Create a simple study planner. Ask me for subjects, my deadline, and available hours. Return a realistic day-by-day revision plan with breaks and state your assumptions.",
+        career:
+          "Act as an interview practice coach for an entry-level engineering role. Ask one question at a time, wait for my answer, then give feedback on clarity, structure, and technical detail. Do not invent experience.",
+        campus:
+          "Create a campus FAQ helper using only the notes I provide. If an answer is not in the notes, say you do not know. Keep answers short and friendly.",
+      };
+      api("/api/source?ref=" + encodeURIComponent(ref))
+        .then((s) => {
+          if (s.ref !== "direct") {
+            $("sourceBanner").textContent =
+              "Shared by " + s.role + " · " + s.label;
+            $("sourceBanner").style.display = "inline-block";
+          }
+        })
+        .catch(() => {});
+      $("problemForm").onsubmit = async (e) => {
+        e.preventDefault();
+        projectText = $("problem").value.trim();
+        let area = $("area").value,
+          extra =
+            $("experience").value === "new"
+              ? " Explain each step for a beginner with no coding experience."
+              : " Keep the steps concise and suggest one simple customization.";
+        let scope = scopes[area];
+        $("projectTitle").textContent = titles[area];
+        $("projectScope").textContent =
+          "Your problem: " + projectText + " 60-minute version: " + scope;
+        $("prompt").value =
+          prompts[area] +
+          " My problem is: " +
+          projectText +
+          " Use mock/example data only. Give me one input, one useful output, and one test example. Do not add accounts, payments, or external integrations." +
+          extra;
+        $("result").hidden = false;
+        try {
+          await api("/api/track", { event: "brief", ref });
+        } catch {}
+        $("result").scrollIntoView({ behavior: "smooth", block: "nearest" });
+      };
+      $("copyPrompt").onclick = async () => {
+        try {
+          await navigator.clipboard.writeText($("prompt").value);
+          toast("Starter prompt copied");
+        } catch {
+          toast("Select and copy the prompt text");
+        }
+      };
+      $("shareCard").onclick = async () => {
+        try {
+          await api("/api/track", { event: "share", ref });
+        } catch {}
+        let link = location.origin + "/?ref=" + encodeURIComponent(ref),
+          msg =
+            "I turned a student problem into a small AI project idea: " +
+            $("projectTitle").textContent +
+            ". Make your own card and join the free 60-minute workshop: " +
+            link;
+        window.open(
+          "https://wa.me/?text=" + encodeURIComponent(msg),
+          "_blank",
+          "noopener",
+        );
+      };
+      $("openSignup").onclick = () => $("signup").showModal();
+      $("cancelSignup").onclick = () => $("signup").close();
+      $("signupForm").onsubmit = async (e) => {
+        e.preventDefault();
+        $("formMessage").textContent = "";
+        try {
+          await api("/api/register", {
+            name: $("name").value,
+            email: $("email").value,
+            college: $("college").value,
+            graduationYear: $("year").value,
+            consent: $("consent").checked,
+            ref,
+          });
+          $("signupForm").reset();
+          $("signup").close();
+          toast("You are registered. Check your email for workshop details.");
+        } catch (err) {
+          $("formMessage").textContent = err.message;
+        }
+      };
+    </script>
+  </body>
+</html>
