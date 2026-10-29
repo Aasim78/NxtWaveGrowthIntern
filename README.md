@@ -18,6 +18,12 @@ Then open:
 
 Create a manager username and a password with at least 12 characters on first setup. The password is stored as a salted scrypt hash. Do not share it.
 
+## Live app
+
+- Student app: https://nxtwavegrowthintern.onrender.com/
+- Manager setup: https://nxtwavegrowthintern.onrender.com/setup
+- Manager dashboard: https://nxtwavegrowthintern.onrender.com/manager
+
 ## Campaign flow
 
 1. Sign in at /manager.
